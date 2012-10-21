@@ -13,3 +13,11 @@ of examples.
 | td | td |
 
 * Another top level heading
+  :PROPERTIES:
+  :myproperty: myvalue
+  :otherproperty: othervalue
+  :END:
+
+*** TODO a task
+*** DONE another task
+

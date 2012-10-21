@@ -18,15 +18,15 @@
         pdrawer-re #"^\s*:(PROPERTIES|END):"
         pdrawer (fn [x] (second (re-matches pdrawer-re x)))
         pdrawer-item-re #"^\s*:([0-9A-Za-z_\-]+):\s*(.*)$"
-        block-re #"^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?"
+        block-re #"^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?.*"
         block (fn [x] (rest (re-matches block-re x)))
-        def-list-re #"^\s*(-|\+|\s+[*])\s*(.*?)::"
-        ordered-list-re #"^\s*\d+(\.|\))\s+"
-        unordered-list-re #"^\s*(-|\+|\s+[*])\s+"
-        metadata-re #"^\s*(CLOCK|DEADLINE|START|CLOSED|SCHEDULED):"
+        def-list-re #"^\s*(-|\+|\s+[*])\s*(.*?)::.*"
+        ordered-list-re #"^\s*\d+(\.|\))\s+.*"
+        unordered-list-re #"^\s*(-|\+|\s+[*])\s+.*"
+        metadata-re #"^\s*(CLOCK|DEADLINE|START|CLOSED|SCHEDULED):.*"
         table-sep-re #"^\s*\|[-\|\+]*\s*$"
-        table-row-re #"^\\s*\\|"
-        inline-example-re #"^\s*:\s"
+        table-row-re #"^\\s*\\|.*"
+        inline-example-re #"^\s*:\s.*"
         horiz-re #"^\s*-{5,}\s*$"]
     (cond
      (re-matches headline-re ln) :headline
@@ -44,10 +44,9 @@
      (= (first ln) \#) :comment
      (re-matches table-sep-re ln) :table-separator
      (re-matches table-row-re ln) :table-row
-     (re-matches inline-example-re ln) :inln-example
+     (re-matches inline-example-re ln) :inline-example
      (re-matches horiz-re ln) :horizontal-rule
-     :else :paragraph
-     )))
+     :else :paragraph)))
 
 (defn strip-tags
   "Return the line with tags stripped out and list of tags"
@@ -115,6 +114,9 @@
 (defmethod handle-line :default [state ln]
   (subsume state (line (classify-line ln) ln)))
 
-(defn parse-file [f]
+(defn parse-file
+  "Parse file (name / url / File) into (flat) sequence of sections. First section may be type :root,
+   subsequent are type :section. Other parsed representations may be contained within the sections"
+  [f]
   (with-open [rdr (io/reader f)]
     (reduce handle-line [(root)] (line-seq rdr))))
