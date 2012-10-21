@@ -1,8 +1,32 @@
 * Organum
 
-Simple org-mode parser in clojure.
+Simple [[http://orgmode.org][org-mode]] parser in clojure.
 
 Some regexps and logic flagrantly stolen from [[https://github.com/bdewey/org-ruby][org-ruby]] and [[https://github.com/bjonnh/PyOrgMode][PyOrgMode]].
+
+** Usage
+
+[[http://leiningen.org][Leiningen]] dependency information:
+
+#+BEGIN_SRC clojure
+[org.clojars.gmorpheme/organum "0.1.1"]
+#+END_SRC
+
+[[http://maven.apache.org/][Maven]] dependency information:
+
+#+BEGIN_SRC xml
+<dependency>
+  <groupId>org.clojars.gmorpheme</groupId>
+  <artifactId>organum</artifactId>
+  <version>0.1.1</version>
+</dependency>
+#+END_SRC
+
+#+BEGIN_SRC clojure
+(use 'organum.core)
+(parse-file "test.org")
+;...
+#+END_SRC
 
 Copyright Greg Hawkins 2012. 
 

@@ -1,4 +1,4 @@
-(defproject org.clojars.gmorpheme/organum "0.1.1"
+(defproject org.clojars.gmorpheme/organum "0.1.2"
   :description "Org-mode parser in clojure"
   :url "https://github.com/gmorpheme/organum"
   :license {:name "Eclipse Public License"
