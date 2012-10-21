@@ -1,0 +1,15 @@
+* A test file
+
+This is a test file for parsing in the tests, intended to contain lots
+of examples.
+
+- list item 1
+- list item 2
+- list item 3
+
+** Subheading
+
+| th | th |
+| td | td |
+
+* Another top level heading

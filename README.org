@@ -1,0 +1,8 @@
+* Organum
+
+Simple org-mode parser in clojure. Very simple for now - no
+combinators no monadic parsing no nothing...
+
+Some regexps and logic flagrantly stolen from [[https://github.com/bdewey/org-ruby][org-ruby]] and [[https://github.com/bjonnh/PyOrgMode][PyOrgMode]].
+
+Copyright Greg Hawkins 2012. Distributed under the Eclipse Public License, the same as Clojure.
