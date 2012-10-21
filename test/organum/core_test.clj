@@ -1,19 +1,18 @@
 (ns organum.core-test
   (:use clojure.test
         organum.core)
-  (:require [clojure.java.io :as io])
-  (:import [organum.core Root Section Block Drawer Line]))
+  (:require [clojure.java.io :as io]))
 
-(deftest headline
+(deftest test-headline
   (testing "Parsing headline"
     (is (= (parse-headline "** TODO Some text :atag:btag:")
-           (Section. 2 "Some text" nil ["atag" "btag"] "TODO")))))
+           (section 2 "Some text" ["atag" "btag"] "TODO")))))
 
-(deftest block
+(deftest test-block
   (testing "Parsing block heeader"
     (is (= (parse-block "  #+BEGIN_WIBBLE minor")
-           (Block. "WIBBLE" "minor" nil)))))
+           (block "WIBBLE" "minor")))))
 
-(deftest testfile
+(deftest test-testfile
   (testing "Parsing test.org"
     (is (vector? (parse-file (io/resource "test.org"))))))

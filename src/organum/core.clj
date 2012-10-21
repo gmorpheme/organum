@@ -2,21 +2,24 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as string]))
 
-(defrecord Root [content])
-(defrecord Section [level text content tags keyword])
-(defrecord Block [type qualifier content])
-(defrecord Drawer [content])
-(defrecord Line [type line])
+;; node constructors
+
+(defn node [type] {:type type :content []})
+(defn root [] (node :root))
+(defn section [level name tags kw] (merge (node :section) {:level level :name name :tags tags :kw kw}))
+(defn block [type qualifier] (merge (node :block) {:block-type type :qualifier qualifier}))
+(defn drawer [] (node :drawer))
+(defn line [type text] {:line-type type :text text})
 
 (defn classify-line
   "Classify a line for dispatch to handle-line multimethod."
-  [line]
+  [ln]
   (let [headline-re #"^(\*+)\s*(.*)$"
         pdrawer-re #"^\s*:(PROPERTIES|END):"
-        pdrawer (fn [line] (second (re-matches pdrawer-re line)))
+        pdrawer (fn [x] (second (re-matches pdrawer-re x)))
         pdrawer-item-re #"^\s*:([0-9A-Za-z_\-]+):\s*(.*)$"
         block-re #"^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?"
-        block (fn [line] (rest (re-matches block-re line)))
+        block (fn [x] (rest (re-matches block-re x)))
         def-list-re #"^\s*(-|\+|\s+[*])\s*(.*?)::"
         ordered-list-re #"^\s*\d+(\.|\))\s+"
         unordered-list-re #"^\s*(-|\+|\s+[*])\s+"
@@ -26,52 +29,52 @@
         inline-example-re #"^\s*:\s"
         horiz-re #"^\s*-{5,}\s*$"]
     (cond
-     (re-matches headline-re line) :headline
-     (string/blank? line) :blank
-     (re-matches def-list-re line) :definition-list
-     (re-matches ordered-list-re line) :ordered-list
-     (re-matches unordered-list-re line) :unordered-list
-     (= (pdrawer line) "PROPERTIES") :property-drawer-begin-block
-     (= (pdrawer line) "END") :property-drawer-end-block
-     (re-matches pdrawer-item-re line) :property-drawer-item
-     (re-matches metadata-re line) :metadata
-     (= (first (block line)) "BEGIN") :begin-block
-     (= (first (block line)) "END") :end-block
-     (= (second (block line)) "COMMENT") :comment
-     (= (first line) \#) :comment
-     (re-matches table-sep-re line) :table-separator
-     (re-matches table-row-re line) :table-row
-     (re-matches inline-example-re line) :inline-example
-     (re-matches horiz-re line) :horizontal-rule
+     (re-matches headline-re ln) :headline
+     (string/blank? ln) :blank
+     (re-matches def-list-re ln) :definition-list
+     (re-matches ordered-list-re ln) :ordered-list
+     (re-matches unordered-list-re ln) :unordered-list
+     (= (pdrawer ln) "PROPERTIES") :property-drawer-begin-block
+     (= (pdrawer ln) "END") :property-drawer-end-block
+     (re-matches pdrawer-item-re ln) :property-drawer-item
+     (re-matches metadata-re ln) :metadata
+     (= (first (block ln)) "BEGIN") :begin-block
+     (= (first (block ln)) "END") :end-block
+     (= (second (block ln)) "COMMENT") :comment
+     (= (first ln) \#) :comment
+     (re-matches table-sep-re ln) :table-separator
+     (re-matches table-row-re ln) :table-row
+     (re-matches inline-example-re ln) :inln-example
+     (re-matches horiz-re ln) :horizontal-rule
      :else :paragraph
      )))
 
 (defn strip-tags
   "Return the line with tags stripped out and list of tags"
-  [line]
-  (if-let [[_ text tags] (re-matches #"(.*?)\s*(:[\w:]*:)\s*$" line)]
+  [ln]
+  (if-let [[_ text tags] (re-matches #"(.*?)\s*(:[\w:]*:)\s*$" ln)]
     [text (remove string/blank? (string/split tags #":"))]
-    [line nil]))
+    [ln nil]))
 
 (defn strip-keyword
   "Return the line with keyword stripped out and list of keywords"
-  [line]
+  [ln]
   (let [keywords-re #"(TODO|DONE)?"
-        words (string/split line #"\s+")]
+        words (string/split ln #"\s+")]
     (if (re-matches keywords-re (words 0))
-      [(string/triml (string/replace-first line (words 0) "")) (words 0)] 
-      [line nil])))
+      [(string/triml (string/replace-first ln (words 0) "")) (words 0)] 
+      [ln nil])))
 
-(defn parse-headline [l]
-  (when-let [[_ prefix text] (re-matches  #"^(\*+)\s*(.*?)$" l)]
+(defn parse-headline [ln]
+  (when-let [[_ prefix text] (re-matches  #"^(\*+)\s*(.*?)$" ln)]
     (let [[text tags] (strip-tags text)
           [text kw] (strip-keyword text)]
-      (Section. (count prefix) text nil tags kw))))
+      (section (count prefix) text tags kw))))
 
-(defn parse-block [l]
+(defn parse-block [ln]
   (let [block-re #"^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?"
-        [_ _ type qualifier] (re-matches block-re l)]
-    (Block. type qualifier nil)))
+        [_ _ type qualifier] (re-matches block-re ln)]
+    (block type qualifier)))
 
 ;; State helpers
 
@@ -90,33 +93,28 @@
         state (pop state)]
     (subsume state top)))
 
-(defmulti handle-line (fn [state line] (classify-line line)))
+(defmulti handle-line
+  "Parse line and return updated state."
+  (fn [state ln] (classify-line ln)))
 
-(defmethod handle-line :headline [state line]
-  (let [hl (parse-headline line)]
-    (conj state hl)))
+(defmethod handle-line :headline [state ln]
+  (conj state (parse-headline ln)))
 
-(defmethod handle-line :begin-block [state line]
-  (let [bl (parse-block l)]
-    (conj state bl)))
+(defmethod handle-line :begin-block [state ln]
+  (conj state (parse-block ln)))
 
-(defmethod handle-line :end-block [state line]
+(defmethod handle-line :end-block [state ln]
   (subsume-top state))
 
-(defmethod handle-line :property-drawer-begin-block [state line]
-  (conj state (Drawer. nil)))
+(defmethod handle-line :property-drawer-begin-block [state ln]
+  (conj state (drawer)))
 
-(defmethod handle-line :property-drawer-end-block [state line]
+(defmethod handle-line :property-drawer-end-block [state ln]
   (subsume-top state))
 
-(defmethod handle-line :default [state line]
-  (subsume state (Line. (classify-line line) line)))
-
-(defn in-buffer-setting [line]
-  (rest (re-matches #"^#\+(\w+):\s*(.*)$" line)))
-
-(defn initial-state [] [(Root. [])])
+(defmethod handle-line :default [state ln]
+  (subsume state (line (classify-line ln) ln)))
 
 (defn parse-file [f]
   (with-open [rdr (io/reader f)]
-    (reduce handle-line (initial-state) (line-seq rdr))))
+    (reduce handle-line [(root)] (line-seq rdr))))
