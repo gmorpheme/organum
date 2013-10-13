@@ -15,6 +15,28 @@ as well as match contents."
         :end (.end m i)
         :group (.group m i)}))))
 
+(defn re-search-forward
+  [re s i]
+  (let [m (re-matcher re s)]
+    (and
+     (.find m i)
+     (for [i (range (inc (.groupCount m)))]
+       {:start (.start m i)
+        :end (.end m i)
+        :group (.group m i)}))))
+
+(defn re-search-backward
+  [re s n]
+  (let [m (re-matcher re s)
+        find-after (fn [x]
+                     (when (.find m x)
+                       (let [result (.start m 0)]
+                         (and (< result n) result))))]
+    (when-let [fst (find-after 0)]
+      (loop [i fst]
+        (if-let [next (find-after (inc i))]
+          (recur next)
+          i)))))
 
 ;; buffer abstraction
 
@@ -23,8 +45,7 @@ as well as match contents."
   (point-max [self])
   (goto-char [self n])
   (at [self n])
-  (looking-at [self re])
-  (re-search-forward [self index re]))
+  (looking-at [self re]))
 
 (defrecord IndexedString [s i]
     Buffer
@@ -73,10 +94,6 @@ as well as match contents."
         (recur (inc i))
         [nil [b i]]))))
 
-#_(defn outline-next-heading-m []
-  (fn [[b n]]
-    [nil (re-search-forward [b (if (bol-p [b n]) (inc n) n) #"\*+"])]))
-
 ;; org-emph-re
 
 (def emphasis-regexp-components
@@ -114,7 +131,7 @@ Assume point is at the first emphasis marker."
   [kw]
   (fn [buf]
     (let [b (if (not (bolp buf)) (backward-char buf 1) buf)
-          [_ _ {begin :start end :end} _ {contents-begin :start contents-end :end} _] (looking-at b emph-re)
+          [_ _ {begin :start end :end} _ {contents-begin :start contents-end :end value :group} _] (looking-at b emph-re)
           [post-blank b] ((skip-chars-forward-m " \t") (goto-char b end))]
       [[kw {:begin begin
             :end end
@@ -149,3 +166,33 @@ contents is the contents of the object."
 contents is the contents of the object."
   [underline contents]
   (format "_%s_" contents))
+
+(defn strike-through-parser-m []
+  (emph-parser-m :strike-through))
+
+(defn strike-through-interpreter
+  "Interpret strike-through object as Org syntax.
+contents is the contents of the object."
+  [strike-through contents]
+  (format "+%s+" contents))
+
+(defn verbatim-parser-m []
+  (emph-parser-m :verbatim))
+
+(defn verbatim-interpreter 
+  "Interpret verbatim object as Org syntax.
+contents is the contents of the object."
+  [verbatim contents]
+  (format "=%s=" contents))
+
+(defn code-parser-m []
+  (emph-parser-m :code))
+
+(defn code-interpreter
+    "Interpret code object as Org syntax.
+contents is the contents of the object."
+  [code contents]
+  (format "~%s~" contents))
+
+(defn heading-components []
+  )

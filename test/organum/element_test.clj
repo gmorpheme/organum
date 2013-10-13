@@ -3,6 +3,11 @@
         [organum.element]))
 
 (facts
+  "Regex fns"
+  (re-search-forward #"(x)" " x x x x" 3) => [{:start 3, :end 4, :group "x"} {:start 3, :end 4, :group "x"}]
+  (re-search-forward #"(x)" " x x x x" 4) => [{:start 5, :end 6, :group "x"} {:start 5, :end 6, :group "x"}])
+
+(facts
   "Emphasis regex"
   (re-matches emph-re " _Hello_ ") => [" _Hello_ " " " "_Hello_" "_" "Hello" " "]
   (re-matches emph-re " *Hello* ") => [" *Hello* " " " "*Hello*" "*" "Hello" " "]
