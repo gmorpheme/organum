@@ -71,7 +71,7 @@
       (section (count prefix) text tags kw))))
 
 (defn parse-block [ln]
-  (let [block-re #"^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?"
+  (let [block-re #"^\s*#\+(BEGIN|END)_(\w*)\s*([0-9A-Za-z_\-]*)?.*"
         [_ _ type qualifier] (re-matches block-re ln)]
     (block type qualifier)))
 
