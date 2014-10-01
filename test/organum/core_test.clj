@@ -14,6 +14,11 @@
     (is (= (parse-block "  #+BEGIN_WIBBLE minor")
            (block "WIBBLE" "minor")))))
 
+(deftest test-src-block
+  (testing "Parsing block heeader"
+    (is (= (parse-block "  #+BEGIN_SRC minor :tangle blah")
+           (block "SRC" "minor")))))
+
 (deftest test-testfile
   (testing "Parsing test.org"
     (let [sections (parse-file (io/resource "test.org"))]
