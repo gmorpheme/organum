@@ -10,12 +10,12 @@
            (section 2 "Some text" ["atag" "btag"] "TODO")))))
 
 (deftest test-block
-  (testing "Parsing block heeader"
+  (testing "Parsing block header"
     (is (= (parse-block "  #+BEGIN_WIBBLE minor")
            (block "WIBBLE" "minor")))))
 
 (deftest test-src-block
-  (testing "Parsing block heeader"
+  (testing "Parsing block header"
     (is (= (parse-block "  #+BEGIN_SRC minor :tangle blah")
            (block "SRC" "minor")))))
 
