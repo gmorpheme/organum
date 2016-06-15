@@ -1,5 +1,7 @@
 * Organum
 
+*This repository is no longer maintained! Please see [[https://github.com/seylerius/organum][seylerius/organum]] instead.*
+
 Simple [[http://orgmode.org][org-mode]] parser in clojure.
 
 Some regexps and logic flagrantly stolen from [[https://github.com/bdewey/org-ruby][org-ruby]] and [[https://github.com/bjonnh/PyOrgMode][PyOrgMode]].
