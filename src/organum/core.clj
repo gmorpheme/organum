@@ -25,7 +25,7 @@
         unordered-list-re #"^\s*(-|\+|\s+[*])\s+.*"
         metadata-re #"^\s*(CLOCK|DEADLINE|START|CLOSED|SCHEDULED):.*"
         table-sep-re #"^\s*\|[-\|\+]*\s*$"
-        table-row-re #"^\\s*\\|.*"
+        table-row-re #"^\s*\|.*"
         inline-example-re #"^\s*:\s.*"
         horiz-re #"^\s*-{5,}\s*$"]
     (cond
